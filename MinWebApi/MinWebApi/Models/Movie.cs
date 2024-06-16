@@ -1,4 +1,6 @@
-﻿namespace MinWebApi.Models
+﻿using System.Text.Json.Serialization;
+
+namespace MinWebApi.Models
 {
     public class Movie
     {
@@ -6,6 +8,7 @@
         public string Title { get; set; }
         public int Year { get; set; }
         public float Rating { get; set; }
-        public ICollection<Review>? Reviews { get; set; }
+        [JsonIgnore]
+        public virtual ICollection<Review>? Reviews { get; set; }
     }
 }
