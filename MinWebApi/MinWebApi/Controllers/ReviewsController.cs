@@ -44,16 +44,13 @@ namespace MinWebApi.Controllers
         {
             review.Reviewer = await _context.Users.FindAsync(review.ReviewerId);
             review.Movie = await _context.Movies.FindAsync(review.MovieId);
-            if (review.Reviewer == null || review.Movie == null)
+            if (review.Movie == null)
             {
-                if (review.Movie == null)
-                {
-                    return NotFound($"Movie with id = {review.MovieId} not found.");
-                }
-                if (review.Reviewer == null)
-                {
-                    return NotFound($"User with id = {review.ReviewerId} not found.");
-                }
+                return NotFound($"Movie with id = {review.MovieId} not found.");
+            }
+            if (review.Reviewer == null)
+            {
+                return NotFound($"User with id = {review.ReviewerId} not found.");
             }
             _context.Reviews.Add(review);
             await _context.SaveChangesAsync();

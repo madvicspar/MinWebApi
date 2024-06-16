@@ -26,14 +26,12 @@ namespace MinWebApi.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<ApplicationUser>> GetApplicationUser(int id)
         {
-            var applicationUser = await _context.Users.FindAsync(id);
+            var applicationUser = await _context.Users.Include(m => m.Reviews).ThenInclude(x => x.Movie).FirstOrDefaultAsync(m => m.Id == id);
 
             if (applicationUser == null)
             {
                 return NotFound();
             }
-
-            applicationUser.Reviews = _context.Reviews.Where(r => r.ReviewerId == applicationUser.Id).ToList();
 
             return applicationUser;
         }

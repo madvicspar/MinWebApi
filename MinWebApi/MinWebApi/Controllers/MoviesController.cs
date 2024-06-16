@@ -26,14 +26,12 @@ namespace MinWebApi.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Movie>> GetMovie(int id)
         {
-            var movie = await _context.Movies.FindAsync(id);
+            var movie = await _context.Movies.Include(m => m.Reviews).ThenInclude(x => x.Reviewer).FirstOrDefaultAsync(m => m.Id == id);
 
             if (movie == null)
             {
                 return NotFound();
             }
-
-            movie.Reviews = _context.Reviews.Where(r => r.MovieId == movie.Id).ToList();
 
             return movie;
         }
