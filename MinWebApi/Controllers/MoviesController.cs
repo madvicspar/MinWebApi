@@ -19,14 +19,14 @@ namespace MinWebApi.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Movie>>> GetMovies()
         {
-            return await _context.Movies.Include(m => m.Reviews).ThenInclude(x => x.Reviewer).ToListAsync();
+            return await _context.Movies.ToListAsync();
         }
 
         // GET: api/Movies/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Movie>> GetMovie(int id)
         {
-            var movie = await _context.Movies.Include(m => m.Reviews).ThenInclude(x => x.Reviewer).FirstOrDefaultAsync(m => m.Id == id);
+            var movie = await _context.Movies.FirstOrDefaultAsync(m => m.Id == id);
 
             if (movie == null)
             {

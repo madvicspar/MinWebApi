@@ -7,7 +7,5 @@ namespace MinWebApi.Models
     {
         public int Age { get; set; }
         public string Country { get; set; }
-        [JsonIgnore]
-        public virtual ICollection<Review>? Reviews { get; set; }
     }
 }

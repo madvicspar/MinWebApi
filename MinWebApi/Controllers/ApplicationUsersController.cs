@@ -19,14 +19,14 @@ namespace MinWebApi.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ApplicationUser>>> GetUsers()
         {
-            return await _context.Users.Include(m => m.Reviews).ThenInclude(x => x.Movie).ToListAsync();
+            return await _context.Users.ToListAsync();
         }
 
         // GET: api/ApplicationUsers/5
         [HttpGet("{id}")]
         public async Task<ActionResult<ApplicationUser>> GetApplicationUser(int id)
         {
-            var applicationUser = await _context.Users.Include(m => m.Reviews).ThenInclude(x => x.Movie).FirstOrDefaultAsync(m => m.Id == id);
+            var applicationUser = await _context.Users.FirstOrDefaultAsync(m => m.Id == id);
 
             if (applicationUser == null)
             {

@@ -5,6 +5,7 @@ namespace MinWebApi.Models
 {
     public class Review
     {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         [ForeignKey("ReviewerId")]
         public int ReviewerId { get; set; }

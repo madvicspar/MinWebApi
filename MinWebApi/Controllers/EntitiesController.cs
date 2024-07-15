@@ -20,7 +20,7 @@ namespace MinWebApi.Controllers
         [HttpGet("users")]
         public async Task<ActionResult<IEnumerable<ApplicationUser>>> GetUsers()
         {
-            return await _context.Users.Include(m => m.Reviews).ThenInclude(x => x.Movie).ToListAsync();
+            return await _context.Users.ToListAsync();
         }
 
         [HttpGet("reviews")]
@@ -32,13 +32,13 @@ namespace MinWebApi.Controllers
         [HttpGet("movies")]
         public async Task<ActionResult<IEnumerable<Movie>>> GetMovies()
         {
-            return await _context.Movies.Include(m => m.Reviews).ThenInclude(x => x.Reviewer).ToListAsync();
+            return await _context.Movies.ToListAsync();
         }
 
         [HttpGet("users/{id}")]
         public async Task<ActionResult<ApplicationUser>> GetUser(int id)
         {
-            var applicationUser = await _context.Users.Include(m => m.Reviews).ThenInclude(x => x.Movie).FirstOrDefaultAsync(m => m.Id == id);
+            var applicationUser = await _context.Users.FirstOrDefaultAsync(m => m.Id == id);
 
             if (applicationUser == null)
             {
@@ -65,7 +65,7 @@ namespace MinWebApi.Controllers
         [HttpGet("movies/{id}")]
         public async Task<ActionResult<Movie>> GetMovie(int id)
         {
-            var movie = await _context.Movies.Include(m => m.Reviews).ThenInclude(x => x.Reviewer).FirstOrDefaultAsync(m => m.Id == id);
+            var movie = await _context.Movies.FirstOrDefaultAsync(m => m.Id == id);
 
             if (movie == null)
             {
