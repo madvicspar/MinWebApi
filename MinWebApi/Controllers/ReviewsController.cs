@@ -59,16 +59,18 @@ namespace MinWebApi.Controllers
         [HttpPost]
         public async Task<ActionResult<Review>> PostReview(Review review)
         {
-            review.Reviewer = await _context.Users.FindAsync(review.ReviewerId);
             review.Movie = await _context.Movies.FindAsync(review.MovieId);
             if (review.Movie == null)
             {
                 return NotFound($"Movie with id = {review.MovieId} not found.");
             }
+
+            review.Reviewer = await _context.Users.FindAsync(review.ReviewerId);
             if (review.Reviewer == null)
             {
                 return NotFound($"User with id = {review.ReviewerId} not found.");
             }
+
             _context.Reviews.Add(review);
             await _context.SaveChangesAsync();
 
