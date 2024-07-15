@@ -8,17 +8,6 @@ namespace MinWebApi.Controllers
     [ApiController]
     public class ReviewsController : ControllerBase
     {
-        private readonly ApplicationContext _context;
-
-        /// <summary>
-        /// Constructor for the ReviewsController
-        /// </summary>
-        /// <param name="context">The db context</param>
-        public ReviewsController(ApplicationContext context)
-        {
-            _context = context;
-        }
-
         /// <summary>
         /// Retrieves all users
         /// </summary>
@@ -27,10 +16,19 @@ namespace MinWebApi.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Review>>> GetReviews()
         {
-            return await _context.Reviews
-                .Include(x => x.Movie)
-                .Include(y => y.Reviewer)
-                .ToListAsync();
+            using (var serviceScope = ServiceActivator.GetScope())
+            {
+                var dataBase = serviceScope.ServiceProvider.GetService<ApplicationContext>();
+                if (dataBase == null)
+                {
+                    StatusCode(500, "Database access failed.");
+                }
+
+                return await dataBase.Reviews
+                    .Include(x => x.Movie)
+                    .Include(y => y.Reviewer)
+                    .ToListAsync();
+            }
         }
 
         /// <summary>
@@ -42,12 +40,21 @@ namespace MinWebApi.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Review>> GetReview(int id)
         {
-            var review = await _context.Reviews
-                .Include(r => r.Movie)
-                .Include(r => r.Reviewer)
-                .FirstOrDefaultAsync(r => r.Id == id);
+            using (var serviceScope = ServiceActivator.GetScope())
+            {
+                var dataBase = serviceScope.ServiceProvider.GetService<ApplicationContext>();
+                if (dataBase == null)
+                {
+                    return StatusCode(500, "Database access failed.");
+                }
 
-            return review == null ? NotFound() : review;
+                var review = await dataBase.Reviews
+                    .Include(r => r.Movie)
+                    .Include(r => r.Reviewer)
+                    .FirstOrDefaultAsync(r => r.Id == id);
+
+                return review == null ? NotFound() : review;
+            }
         }
 
         /// <summary>
@@ -59,22 +66,29 @@ namespace MinWebApi.Controllers
         [HttpPost]
         public async Task<ActionResult<Review>> PostReview(Review review)
         {
-            review.Movie = await _context.Movies.FindAsync(review.MovieId);
-            if (review.Movie == null)
+            using (var serviceScope = ServiceActivator.GetScope())
             {
-                return NotFound($"Movie with id = {review.MovieId} not found.");
+                var dataBase = serviceScope.ServiceProvider.GetService<ApplicationContext>();
+                if (dataBase == null)
+                {
+                    return StatusCode(500, "Database access failed.");
+                }
+
+                if (!dataBase.Movies.AnyAsync(m => m.Id == review.MovieId).Result)
+                {
+                    return NotFound($"Movie with id = {review.MovieId} not found.");
+                }
+
+                if (!dataBase.Users.AnyAsync(m => m.Id == review.ReviewerId).Result)
+                {
+                    return NotFound($"User with id = {review.ReviewerId} not found.");
+                }
+
+                dataBase.Reviews.Add(review);
+                await dataBase.SaveChangesAsync();
+
+                return CreatedAtAction("GetReview", new { id = review.Id }, review);
             }
-
-            review.Reviewer = await _context.Users.FindAsync(review.ReviewerId);
-            if (review.Reviewer == null)
-            {
-                return NotFound($"User with id = {review.ReviewerId} not found.");
-            }
-
-            _context.Reviews.Add(review);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetReview", new { id = review.Id }, review);
         }
     }
 }

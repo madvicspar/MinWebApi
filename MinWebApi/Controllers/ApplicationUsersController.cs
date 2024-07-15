@@ -8,17 +8,6 @@ namespace MinWebApi.Controllers
     [ApiController]
     public class ApplicationUsersController : ControllerBase
     {
-        private readonly ApplicationContext _context;
-
-        /// <summary>
-        /// Constructor for the ApplicationUsersController
-        /// </summary>
-        /// <param name="context">The database context</param>
-        public ApplicationUsersController(ApplicationContext context)
-        {
-            _context = context;
-        }
-
         /// <summary>
         /// Retrieves all users
         /// </summary>
@@ -27,7 +16,16 @@ namespace MinWebApi.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ApplicationUser>>> GetUsers()
         {
-            return await _context.Users.ToListAsync();
+            using (var serviceScope = ServiceActivator.GetScope())
+            {
+                var dataBase = serviceScope.ServiceProvider.GetService<ApplicationContext>();
+                if (dataBase == null)
+                {
+                    return StatusCode(500, "Database access failed.");
+                }
+
+                return await dataBase.Users.ToListAsync();
+            }
         }
 
         /// <summary>
@@ -39,8 +37,17 @@ namespace MinWebApi.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<ApplicationUser>> GetApplicationUser(int id)
         {
-            var applicationUser = await _context.Users.FirstOrDefaultAsync(m => m.Id == id);
-            return applicationUser == null ? NotFound() : applicationUser;
+            using (var serviceScope = ServiceActivator.GetScope())
+            {
+                var dataBase = serviceScope.ServiceProvider.GetService<ApplicationContext>();
+                if (dataBase == null)
+                {
+                    return StatusCode(500, "Database access failed.");
+                }
+
+                var applicationUser = await dataBase.Users.FirstOrDefaultAsync(m => m.Id == id);
+                return applicationUser == null ? NotFound() : applicationUser;
+            }
         }
 
         /// <summary>
@@ -52,9 +59,18 @@ namespace MinWebApi.Controllers
         [HttpPost]
         public async Task<ActionResult<ApplicationUser>> PostApplicationUser(ApplicationUser applicationUser)
         {
-            _context.Users.Add(applicationUser);
-            await _context.SaveChangesAsync();
-            return CreatedAtAction("GetApplicationUser", new { id = applicationUser.Id }, applicationUser);
+            using (var serviceScope = ServiceActivator.GetScope())
+            {
+                var dataBase = serviceScope.ServiceProvider.GetService<ApplicationContext>();
+                if (dataBase == null)
+                {
+                    return StatusCode(500, "Database access failed.");
+                }
+
+                dataBase.Users.Add(applicationUser);
+                await dataBase.SaveChangesAsync();
+                return CreatedAtAction("GetApplicationUser", new { id = applicationUser.Id }, applicationUser);
+            }
         }
     }
 }

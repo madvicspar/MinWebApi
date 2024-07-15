@@ -8,17 +8,6 @@ namespace MinWebApi.Controllers
     [ApiController]
     public class MoviesController : ControllerBase
     {
-        private readonly ApplicationContext _context;
-
-        /// <summary>
-        /// Constructor for the MoviesController
-        /// </summary>
-        /// <param name="context">The db context</param>
-        public MoviesController(ApplicationContext context)
-        {
-            _context = context;
-        }
-
         /// <summary>
         /// Retrieves all movies
         /// </summary>
@@ -27,7 +16,16 @@ namespace MinWebApi.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Movie>>> GetMovies()
         {
-            return await _context.Movies.ToListAsync();
+            using (var serviceScope = ServiceActivator.GetScope())
+            {
+                var dataBase = serviceScope.ServiceProvider.GetService<ApplicationContext>();
+                if (dataBase == null)
+                {
+                    return StatusCode(500, "Database access failed.");
+                }
+
+                return await dataBase.Movies.ToListAsync();
+            }
         }
 
         /// <summary>
@@ -39,8 +37,17 @@ namespace MinWebApi.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Movie>> GetMovie(int id)
         {
-            var movie = await _context.Movies.FirstOrDefaultAsync(m => m.Id == id);
-            return movie == null ? NotFound() : movie;
+            using (var serviceScope = ServiceActivator.GetScope())
+            {
+                var dataBase = serviceScope.ServiceProvider.GetService<ApplicationContext>();
+                if (dataBase == null)
+                {
+                    return StatusCode(500, "Database access failed.");
+                }
+
+                var movie = await dataBase.Movies.FirstOrDefaultAsync(m => m.Id == id);
+                return movie == null ? NotFound() : movie;
+            }
         }
 
         /// <summary>
@@ -52,9 +59,18 @@ namespace MinWebApi.Controllers
         [HttpPost]
         public async Task<ActionResult<Movie>> PostMovie(Movie movie)
         {
-            _context.Movies.Add(movie);
-            await _context.SaveChangesAsync();
-            return CreatedAtAction("GetMovie", new { id = movie.Id }, movie);
+            using (var serviceScope = ServiceActivator.GetScope())
+            {
+                var dataBase = serviceScope.ServiceProvider.GetService<ApplicationContext>();
+                if (dataBase == null)
+                {
+                    return StatusCode(500, "Database access failed.");
+                }
+
+                dataBase.Movies.Add(movie);
+                await dataBase.SaveChangesAsync();
+                return CreatedAtAction("GetMovie", new { id = movie.Id }, movie);
+            }
         }
     }
 }
